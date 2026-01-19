@@ -1,0 +1,41 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    # 每天 UTC 03:00 自动运行一次
+    - cron: '0 3 * * *'
+  workflow_dispatch: # 手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout 当前仓库
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. 设置 git config
+      - name: Configure git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+      # 3. 添加 upstream 并抓取
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/millylee/anyrouter-check-in.git
+          git fetch upstream
+
+      # 4. Rebase 或 Merge 上游到 main
+      - name: Update branch
+        run: |
+          git checkout main
+          git rebase upstream/main
+
+      # 5. 推送回你的 fork
+      - name: Push changes
+        run: |
+          git push origin main --force-with-lease
